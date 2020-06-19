@@ -1,0 +1,765 @@
+<html>
+<head>
+</head>
+
+<!-- jQuery and jQuery plugins -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="https://timbrady.org/turk/TimTurkTools.js"></script>
+
+<!-- Experiment style -->
+<link rel="stylesheet" type="text/css" href="https://akan-bucket.s3.amazonaws.com/sceneView/code/style_sceneView.css">
+
+<script src="https://akan-bucket.s3.amazonaws.com/sceneView/code/_board.js"></script>
+<script src="https://akan-bucket.s3.amazonaws.com/sceneView/code/clicked.js"></script>
+<script src="https://akan-bucket.s3.amazonaws.com/sceneView/code/counterBalance.js"></script>
+<script src="https://akan-bucket.s3.amazonaws.com/sceneView/code/createWarning.js"></script>
+
+
+
+<script>
+window.onload = function() {document.getElementById('submitButton')};
+
+/* When the document is ready, do some things:
+  -------------------------------------------- */
+$(document).ready(function() {
+	$('#submitButton').hide();
+
+	document.getElementById("searchDisplay").style.visibility = "hidden";
+});
+
+var trialOrder = shuffle([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40]);    //order of images presented
+var curTrial = 0;
+var boardIndex = 0; 
+var targetSquare = new Array(1); 
+
+var firstRTs = new Array(1);           // pressing spacebar after finding target RTs
+
+var secondRTs = new Array(1);         //clicking squares RTs
+var clickedSquare = new Array(1);
+
+var thirdRTs = new Array(1);         //manMade or Not RTs
+var manMadeBools = new Array(1);
+
+var partTwoTaskShown; 
+var lateWarning; 
+
+var tooSlow = false; 
+
+//Search Task Direction: an array of 1s and 0s. 
+//0 is an upSearchTask
+//1 is a downSearchTask
+var STDirection = new Array(); 
+
+function getRandomInt(min, max) {
+
+min = Math.ceil(min);
+max = Math.floor(max);
+var num =  Math.floor(Math.random() * (max - min + 1)) + min;
+return num; 
+}
+  
+counterBalance(); 
+createBoard(); 
+
+
+
+//hidden inputs are created
+
+
+function createInputs() {
+    window.onload = function() {
+        for (var i = 1; i <=40; i++) {
+            var reactionTime1 = document.createElement("input");
+            reactionTime1.id  = "inputRT1_" + i; 
+            reactionTime1.name = "RT1_" + i; 
+            reactionTime1.value = -1; 
+            reactionTime1.type = "hidden"; 
+
+            var reactionTime2 = document.createElement("input");
+            reactionTime2.id  = "inputRT2_" + i; 
+            reactionTime2.name = "RT2_" + i; 
+            reactionTime2.value = -1; 
+            reactionTime2.type = "hidden"; 
+
+            var reactionTime3 =  document.createElement("input");
+            reactionTime3.id  = "inputRT3_" + i; 
+            reactionTime3.name = "RT3_" + i; 
+            reactionTime3.value = -1; 
+            reactionTime3.type = "hidden"; 
+
+            var sceneCateg =  document.createElement("input");
+            sceneCateg.id  = "inputSceneCateg_" + i; 
+            sceneCateg.name = "sceneCateg_" + i; 
+            sceneCateg.value = -1; 
+            sceneCateg.type = "hidden"; 
+
+            var targetSquare =  document.createElement("input");
+            targetSquare.id  = "inputTargetSq_" + i; 
+            targetSquare.name = "targetSquare_" + i; 
+            targetSquare.value = targetSquare[i -1]; 
+            targetSquare.type = "hidden"; 
+
+            var clickedSquare =  document.createElement("input");
+            clickedSquare.id  = "inputClickedSq_" + i; 
+            clickedSquare.name = "clickedSquare_" + i; 
+            clickedSquare.value = -1; 
+            clickedSquare.type = "hidden"; 
+
+            document.body.appendChild(reactionTime1); 
+            document.body.appendChild(reactionTime2);
+            document.body.appendChild(reactionTime3); 
+            document.body.appendChild(sceneCateg);
+            document.body.appendChild(targetSquare);
+            document.body.appendChild(clickedSquare);
+        }
+    }
+}
+createInputs(); 
+
+/* They clicked the start experiment button: */
+function startDemo() {
+    $(instructionDescript).hide(); 
+    $(instructionHeader).hide(); 
+
+    $('#sampleImage').show();
+    document.getElementById('demoPt1').style.visibility = "visible";
+    document.getElementById('startDemo').style.visibility = "hidden";
+    document.getElementById('nextOne').style.visibility = "visible";
+}
+
+function startDemo2() {
+    $('#nextOne').hide(); 
+    $('#sampleImage').hide();
+    $('#demoPt1').hide();
+    $('#demoScheme').show();
+    document.getElementById('demoPt2').style.visibility = "visible";
+    document.getElementById('nextTwo').style.visibility = "visible"; 
+
+}
+
+function startDemo3() {
+    $('#nextTwo').hide(); 
+    $('#demoScheme').hide();
+    $('#demoPt2').hide();
+    document.getElementById('demoPt3').style.visibility = "visible";
+    document.getElementById('startExp').style.visibility = "visible"; 
+}
+
+function StartExperiment() {       
+
+  $('.instructions').hide();                                        //hides the beginning instructions and the startExperiment button
+  $('body').css('cursor', 'none');
+  $("#instSart").show();
+  document.getElementById("backgroundCircle").style.display = "none"; 
+  $(document).bind("keypress.respond", function(e) { 
+       if  (e.which==118) {    //118 = v
+		      $(document).unbind("keypress.respond"); // stop waiting for key
+  			  $("#instSart").hide();
+			  ShowImage();
+	    };
+  	});
+}
+
+/* Show the current trial (available in global variable curTrial): */
+function ShowImage() {
+
+
+// show fixation
+//fixation for 500 ms   
+document.getElementById("statusDIV").style.display = "block"; 
+document.getElementById("statusDIV").innerHTML = "Trial " + (curTrial + 1) + " out of 40";
+
+
+//      setTimeout(function() {  //displays fixation box after 500ms
+$('body').css('cursor', 'none');
+document.getElementById("fixationDot").style.visibility = "visible"; 
+// 	 },500);
+
+//ShowSearchDisplay;
+ setTimeout(function() { //show trial after 100ms
+    document.getElementById("fixationDot").style.visibility = "hidden"; 
+    //console.log("Board index: " + boardIndex); //--> is this variable really necessary? can't we just use the index of the 
+    //board structure, or of the shuffled trials (CurTrial)??
+    $('#trial' + trialOrder[curTrial]).show();   // shows image for 1000ms
+
+        setTimeout(function() {// after 1 second the search task will aooear
+        WaitFirstKeypress(curTrial)
+    }, 1000);
+
+ }, 500);///////
+
+//at this point, the r/l search tas is displaying after the image displays for 1 second   
+}
+
+
+//image is shown, shows searchTask part 1, waits for subject to press key indicating they 
+//found target, then shows searchTask part 2(masked)
+function WaitFirstKeypress(curTrial) {       
+    $('#trial' + trialOrder[curTrial]).hide();      //image is hidden after it is shown
+    
+    createWarning(0);
+    document.getElementById("backgroundCircle").style.display = "block"; 
+    showBoard(1);  //the first part of the search task is shown                
+    startRT = Date.now();	 //  start the timer on their RT:
+    $(document).bind("keypress.respond", function(e) {   //subject will press 'enter key once they find target. 
+        if  (e.which==13) {      //if key is 'enter'
+
+            firstRTs[curTrial] = Date.now() - startRT;   //RT for finding target in search task
+            document.getElementById("inputRT1_" + (curTrial + 1)).value = firstRTs[curTrial]; 
+
+            clearTimeout(lateWarning); //clear TimeOut object if it took you less than 5 seconds to repond
+            $(document).unbind("keypress.respond"); // stop waiting for key
+            clearBoard(); 
+            
+            //show searchtask part 2 (masked r's and l's) 100 ms after searchtask part 1 is cleared
+            setTimeout(function() {
+            document.getElementById('searchDisplay').style.visibility = "hidden";  //hide first part of the trial
+
+            showBoard(2); 
+
+            }, 100);				  
+        
+        }  
+    });      
+}
+
+function askManMade(curTrial){
+	$('#manMadeOrNot').show();
+	  /* Now, wait for a keypress, but stop if 5 seconds have passed: */
+     createWarning(1);                    
+
+    startRT = Date.now();	 // And start the timer on their RT:
+     
+    $(document).bind("keypress.respond", function(e) {
+        if  (e.which==49 || e.which ==50) {      //1 or 2
+
+            thirdRTs[curTrial] = Date.now() - startRT; 
+
+            document.getElementById("inputRT3_" + (curTrial + 1)).value = thirdRTs[curTrial]; 
+
+            clearTimeout(lateWarning); //clear TimeOut object if it took you less than 5 seconds to repond
+            $(document).unbind("keypress.respond"); // stop waiting for key
+            $('#manMadeOrNot').hide();  
+
+            if  ((e.which==49 && (trialOrder[curTrial] > 0 && trialOrder[curTrial] <= 10) || (trialOrder[curTrial] > 20 && trialOrder[curTrial] <=30)) ||
+            (e.which==50 && (trialOrder[curTrial] > 30 && trialOrder[curTrial] <= 40) || (trialOrder[curTrial] > 10 && trialOrder[curTrial] <= 20))) {
+
+                manMadeBools[curTrial] = "correct";
+
+                var ErrorDur = 250;
+
+                $('#correct').show();
+                setTimeout(function() {
+                $('#correct').hide(); //hide second part of trial
+                },ErrorDur);
+            } else { // if it is not target...
+    
+                 manMadeBools[curTrial] = "wrong";
+
+                 var ErrorDur = 3000;
+                 //delay three seconds
+                  $('#wrong').show(); //hide second part of trial
+                  setTimeout(function() {
+                  $('#wrong').hide(); //hide second part of trial
+                 },ErrorDur);
+                }
+
+            document.getElementById("inputSceneCateg_" + (curTrial + 1)).value = manMadeBools[curTrial];
+
+              EndTrial(ErrorDur + 500); 
+            }
+        });
+    } 
+
+//this function runs at the end of a full trial, and then repeats the trial with the next image. 
+//if all 40 images are shown, experiment terminates. 
+function EndTrial(ErrorDur){
+	setTimeout(function() {  
+
+        console.log("boardIndex: " + boardIndex); 
+        console.log("curTrial: " + curTrial); 
+
+		curTrial++; //increase global trial counter
+         if (curTrial < 40) { //this goes out of iteration...
+
+            //reset tooSlow after completion of every trial
+            tooSlow = false; 
+		    ShowImage();
+        } 
+
+        //else if curTrial == 40, 
+        else {
+            //execute once we are done (after last, or 40th, trial!)
+            document.getElementById("statusDIV").style.display = "none"; 
+//             $('#submitButton').show();
+			$('#submitButton').show()
+            $('#done').show();
+            $('body').css('cursor', 'auto'); 
+        }    
+    },ErrorDur); 
+}
+ 
+/* Fisher-Yates shuffle */
+function shuffle(o) {
+        for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+        return o;
+    }
+
+</script>
+
+
+<body>
+
+<!-- text to participant -->
+<div align="center" id="instSart" style="display:none">Ready to start? Press the <b>v key</b> when ready.</div>
+<div align="center" id="warning" style="display:none">Looks like you're taking longer than normal! Press <b>1</b> when you're ready, and we'll start from the last trial. Remember, press the enter key when you see the <b>inverted L</b>, then click where it was.</div>
+
+<!--mechTurk requires a input already premade so I made a dummy hidden input-->
+<input type='hidden' id='dummyInput' name = 'dummyInput' value = '-1'>
+
+<!-- Standard post-experiment comment box (initially hidden): -->
+<div id="done" style="display:none">
+  <p>You are done! Thanks! Click the button below to submit your data and finish the experiment.</p>
+</div>
+
+<!-- May just want to use this instead??? -->
+<div id = "fixationDot" ></div>
+
+<div id = 'correct' class = 'searchTask' style="display:none">
+    <p> Correct</p>
+</div>
+    
+<div id = 'wrong' class = 'searchTask' style="display:none">
+     <p> Incorrect</p>
+</div>
+
+<div id = 'manMadeOrNot'  style="display:none">
+    <p> Was there man-made objects in the previous scene? Press the '1' key for YES and '2' key for NO</p>
+</div>
+
+<div id="statusDIV" style="display:none">Trial 1 out of 40.</div>
+
+<!--very redundant code below--> 
+
+<div id = "backgroundCircle"> </div>
+
+
+<div class = "instructions">
+    <div id="instructionHeader" class = 'header'>
+        <br>Instructions: <br>
+    </div>
+    <div id = "instructionDescript" >
+        <br>This experiment consists of 40 trials. In each trial, you will be shown an image, which will be followed by a search task and then a question about the image. Click next for a demo!
+    </div>
+
+    <div id = "demoPt1" >
+        <br><i>Each trial will start with an image, like above. </i>
+    </div>
+
+    <div id = "demoPt2" >
+        <br><i>You will then be shown a search task in which you must find the inverted L (circled above). Once you find it, press the enter key. Then, click on the gray square where the inverted L appeared.</i>
+    </div>
+
+    <div id = "demoPt3">
+        <br><i>Finally, you will be asked whether the image you were shown is man made or not. Press the '1' key if it is, or the '2' key if it is not. In this example, you would press '2' since the picture was natural and not manmade. While responding, try to be quick and accurate! Good luck!</i>
+    </div>
+
+    <div id = "startExp" >
+        <a href='javascript:StartExperiment()' class='startExperimentButton'>Start Experiment</a>
+    </div>
+
+    <div id = "startDemo" >
+        <a href='javascript:startDemo()' class='startDemoButton'>Start Demo</a>
+    </div>
+
+    <div id = "nextOne" >
+        <a href='javascript:startDemo2()' class='next'>Next</a>
+    </div>
+
+    <div id = "nextTwo" >
+        <a href='javascript:startDemo3()' class='next'>Next</a>
+    </div>
+</div>
+
+<div id = "sampleImage" style="display:none"> 
+    <p> <img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_naturalR_31.jpg" width="300"></p>
+</div>
+
+<div id = "demoScheme" style="display:none"> 
+    <p> <img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/demoScheme.jpg" width="475"></p>
+</div>
+
+<div class = "images">
+
+        <div id = "trial1" class = "image" style="display:none" > 
+          <p> <img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/down_manMadeB_1.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial2" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/down_manMadeB_2.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial3" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/down_manMadeB_3.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial4" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/down_manMadeB_4.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial5" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/down_manMadeB_5.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial6" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/down_manMadeS_6.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial7" class = "image" style="display:none">  
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/down_manMadeS_7.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial8" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/down_manMadeS_8.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial9" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/down_manMadeS_9.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial10" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/down_manMadeS_10.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial11" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/down_naturalR_11.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial12" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/down_naturalR_12.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial13" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/down_naturalR_13.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial14" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/down_naturalR_14.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial15" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/down_naturalR_15.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial16" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/down_naturalT_16.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial17" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/down_naturalT_17.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial18" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/down_naturalT_18.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial19" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/down_naturalT_19.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial20" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/down_naturalT_20.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial21" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_manMadeB_21.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial22" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_manMadeB_22.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial23" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_manMadeB_23.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial24" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_manMadeB_24.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial25" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_manMadeB_25.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial26" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_manMadeS_26.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial27" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_manMadeS_27.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial28" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_manMadeS_28.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial29" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_manMadeS_29.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial30" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_manMadeS_30.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial31" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_naturalR_31.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial32" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_naturalR_32.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial33" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_naturalR_33.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial34" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_naturalR_34.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial35" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_naturalR_35.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial36" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_naturalT_36.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial37" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_naturalT_37.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial38" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_naturalT_38.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial39" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_naturalT_39.jpg" width="600" class = "center"></p>
+        </div>
+  
+        <div id = "trial40" class = "image" style="display:none"> 
+            <p><img src="https://akan-bucket.s3.amazonaws.com/sceneView/stimuli/up_naturalT_40.jpg" width="600" class = "center"></p>
+        </div>
+      </div>
+
+
+<div id="searchDisplay">
+    <div class="dark square 1" ></div>
+    <div class="dark square 2" ></div>
+    <div class="dark square 3" ></div>
+    <div class="dark square 4" ></div>
+    <div class="dark square 5" ></div>
+    <div class="dark square 6" ></div>
+    <div class="dark square 7" ></div>
+    <div class="dark square 8" ></div>
+
+    <div class="dark square 9" ></div>
+    <div class="dark square 10" ></div>
+    <div class="dark square 11" ></div>
+    <div class="dark square 12" ></div>
+    <div class="dark square 13" ></div>
+    <div class="dark square 14" ></div>
+    <div class="dark square 15" ></div>
+    <div class="dark square 16" ></div>
+
+    <div class="dark square 17" ></div>
+    <div class="dark square 18" ></div>
+    <div class="dark square 19" ></div>
+    <div class="dark square 20" ></div>
+    <div class="dark square 21" ></div>
+    <div class="dark square 22" ></div>
+    <div class="dark square 23" ></div>
+    <div class="dark square 24" ></div>
+
+    <div class="dark square 25" ></div>
+    <div class="dark square 26" ></div>
+    <div class="dark square 27" ></div>
+    <div class="dark square 28" ></div>
+    <div class="dark square 29" ></div>
+    <div class="dark square 30" ></div>
+    <div class="dark square 31" ></div>
+    <div class="dark square 32" ></div>
+
+    <div class="dark square 33"></div>
+    <div class="dark square 34" ></div>
+    <div class="dark square 35" ></div>
+    <div class="dark square 36" ></div>
+    <div class="dark square 37" ></div>
+    <div class="dark square 38" ></div>
+    <div class="dark square 39" ></div>
+    <div class="dark square 40" ></div>
+
+    <div class="dark square 41" ></div>
+    <div class="dark square 42" ></div>
+    <div class="dark square 43" ></div>
+    <div class="dark square 44" ></div>
+    <div class="dark square 45" ></div>
+    <div class="dark square 46" ></div>
+    <div class="dark square 47" ></div>
+    <div class="dark square 48" ></div>
+
+    <div class="dark square 49" ></div>
+    <div class="dark square 50" ></div>
+    <div class="dark square 51" ></div>
+    <div class="dark square 52" ></div>
+    <div class="dark square 53" ></div>
+    <div class="dark square 54" ></div>
+    <div class="dark square 55" ></div>
+    <div class="dark square 56" ></div>
+
+    <div class="dark square 57" ></div>
+    <div class="dark square 58" ></div>
+    <div class="dark square 59" ></div>
+    <div class="dark square 60" ></div>
+    <div class="dark square 61" ></div>
+    <div class="dark square 62" ></div>
+    <div class="dark square 63" ></div>
+    <div class="dark square 64" ></div>
+
+    <div class="distractor object" id="distractor-object-1"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-2"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-3"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-4"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-5"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-6"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-7"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-8"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-9"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-10"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-11"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-12"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-13"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-14"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-15"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-16"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-17"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-18"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-19"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-20"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-21"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-22"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-23"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-24"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-25"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-26"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-27"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-28"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-29"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-30"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-31"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-32"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-33"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-34"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-35"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-36"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-37"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-38"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-39"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-40"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-41"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-42"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-43"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-44"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-45"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-46"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-47"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-48"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-49"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-50"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-51"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-52"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-53"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-54"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-55"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-56"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-57"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-58"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-59"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-60"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-61"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-62"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-63"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+    <div class="distractor object" id="distractor-object-64"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/L_square.jpg" width = "40"/></div>
+
+    <div class="pt2 object" id="pt2-object-1" onclick = "clicked(1)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-2" onclick = "clicked(2)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-3" onclick = "clicked(3)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-4" onclick = "clicked(4)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-5" onclick = "clicked(5)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-6" onclick = "clicked(6)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-7" onclick = "clicked(7)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-8" onclick = "clicked(8)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-9" onclick = "clicked(9)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-10" onclick = "clicked(10)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-11" onclick = "clicked(11)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-12" onclick = "clicked(12)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-13" onclick = "clicked(13)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-14" onclick = "clicked(14)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-15" onclick = "clicked(15)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-16" onclick = "clicked(16)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-17" onclick = "clicked(17)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-18" onclick = "clicked(18)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-19" onclick = "clicked(19)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-20" onclick = "clicked(20)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-21" onclick = "clicked(21)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-22" onclick = "clicked(22)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-23" onclick = "clicked(23)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-24" onclick = "clicked(24)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-25" onclick = "clicked(25)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-26" onclick = "clicked(26)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-27" onclick = "clicked(27)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-28" onclick = "clicked(28)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-29" onclick = "clicked(29)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-30" onclick = "clicked(30)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-31" onclick = "clicked(31)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-32" onclick = "clicked(32)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-33" onclick = "clicked(33)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-34" onclick = "clicked(34)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-35" onclick = "clicked(35)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-36" onclick = "clicked(36)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-37" onclick = "clicked(37)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-38" onclick = "clicked(38)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-39" onclick = "clicked(39)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-40" onclick = "clicked(40)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-41" onclick = "clicked(41)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-42" onclick = "clicked(42)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-43" onclick = "clicked(43)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-44" onclick = "clicked(44)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-45" onclick = "clicked(45)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-46" onclick = "clicked(46)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-47" onclick = "clicked(47)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-48" onclick = "clicked(48)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-49" onclick = "clicked(49)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-50" onclick = "clicked(50)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-51" onclick = "clicked(51)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-52" onclick = "clicked(52)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-53" onclick = "clicked(53)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-54" onclick = "clicked(54)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-55" onclick = "clicked(55)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-56" onclick = "clicked(56)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-57" onclick = "clicked(57)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-58" onclick = "clicked(58)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-59" onclick = "clicked(59)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-60" onclick = "clicked(60)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-61" onclick = "clicked(61)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-62" onclick = "clicked(62)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-63" onclick = "clicked(63)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/></div>
+    <div class="pt2 object" id="pt2-object-64" onclick = "clicked(64)"><img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/whiteNoiseMask.jpg" width = "40"/> </div>
+
+    <div class="target object" id="target-object" onclick = "clicked(targetSquare[boardIndex - 1])">
+        <img src="https://akan-bucket.s3.amazonaws.com/sceneView/supplementaryFigures/inverted_L_square.jpg" width = "40"/>
+    </div>
+</div>
+
+</body>
+</html>
