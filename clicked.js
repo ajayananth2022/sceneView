@@ -1,12 +1,7 @@
 function clicked(circleNum){                                    //should be called squareClicked to make more descriptive
 
     clickedSquare[curTrial] = circleNum; 
-    document.getElementById("inputClickedSq_" + (curTrial + 1)).value = clickedSquare[curTrial]; 
-
     secondRTs[curTrial] = Date.now() - partTwoTaskShown; 
-
-    //WARNING: below line only works for version sceneView_11.html and up
-    document.getElementById("inputRT2_" + (curTrial + 1)).value = secondRTs[curTrial]; 
 
     //right now, I didn't set a timeOut. 
     document.getElementById('searchDisplay').style.visibility = "hidden";       //hide second part of trial

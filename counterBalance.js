@@ -1,12 +1,13 @@
 
+//counterBalance function WITH respect to up/down search task
 
 function counterBalance() {
 
     var upManUp = upManDown = downManUp = downManDown = upNatUp = upNatDown = downNatUp = downNatDown = 0; 
     var randNum; 
 
-    //didn't Cat say this function can be greatly simplified...
-    for (var i =0; i <=39; i++) {
+    //Cat said this function can be greatly simplified...
+        for (var i =0; i <=47; i++) {
 
         randNum = getRandomInt(0, 1); //0 : up search task and 1: down search task
 
@@ -15,102 +16,120 @@ function counterBalance() {
         //console.log("upNatUp: " + upNatUp + " upNatDown: " + upNatDown + " downNatUp: " + downNatUp+ " downNatDown: " + downNatDown)
         
         //current image is upMan
-        if (trialOrder[i]>20 && trialOrder[i]<=30) {
+        if (trialOrder[i]>24 && trialOrder[i]<=36) {
             if (randNum == 0) {
-                if (upManUp < 5) {
+                if (upManUp < 6) {
                     STDirection.push(0);
                     upManUp++;  
                     //console.log("REACHD: Up man up");
                 }
-                else if (upManDown < 5) {
+                else if (upManDown < 6) {
                     STDirection.push(1); 
                     upManDown++;
+                    //console.log("REACHD");
+
                 }
             }
             else if (randNum == 1) {
-                if (upManDown < 5){
+                if (upManDown < 6){
                      STDirection.push(1); 
                      upManDown++; 
                      //console.log("REACHD: Up man down");
                 }
-                else if (upManUp < 5) {
+                else if (upManUp < 6) {
                     STDirection.push(0); 
                     upManUp++;
+                    //console.log("REACHD");
+
                 }
             }
         }
         //current image is downMan
-        else if (trialOrder[i]>0 && trialOrder[i]<=10) {
+        else if (trialOrder[i]>0 && trialOrder[i]<=12) {
             if (randNum == 0) {
-                if (downManUp < 5) {
+                if (downManUp < 6) {
                     STDirection.push(0);
                     downManUp++;  
                     //console.log("REACHD: Down man up");
                 }
-                else if (downManDown < 5) {
+                else if (downManDown < 6) {
                     STDirection.push(1); 
                     downManDown++;
+                    //console.log("REACHD");
+
                 }
             }
             else if (randNum == 1) {
-                if (downManDown < 5){
+                if (downManDown < 6){
                      STDirection.push(1); 
                      downManDown++; 
                      //console.log("REACHD: Up man down");
                 }
-                else if (downManUp < 5) {
+                else if (downManUp < 6) {
                     STDirection.push(0); 
                     downManUp++;
+                    //console.log("REACHD");
+
                 }
             }
         }
+
         //current image is upNat
-        else if (trialOrder[i]>30 && trialOrder[i]<=40) {
+        else if (trialOrder[i]>36 && trialOrder[i]<=48) {
             if (randNum == 0) {
-                if (upNatUp < 5) {
+                if (upNatUp < 6) {
                     STDirection.push(0);
                     upNatUp++;  
                     //console.log("REACHD: Down man up");
                 }
-                else if (upNatDown < 5) {
+                else if (upNatDown < 6) {
                     STDirection.push(1); 
                     upNatDown++;
+                    //console.log("REACHD");
+
                 }
             }
             else if (randNum == 1) {
-                if (upNatDown < 5){
+                if (upNatDown < 6){
                      STDirection.push(1); 
                      upNatDown++; 
                      //console.log("REACHD: Up man down");
                 }
-                else if (upNatUp < 5) {
+                else if (upNatUp < 6) {
                     STDirection.push(0); 
                     upNatUp++;
+                    //console.log("REACHD");
+
                 }
             }
         }
+
         //current image is downNat
-        else if (trialOrder[i]>10 && trialOrder[i]<=20) {
+        else if (trialOrder[i]>12 && trialOrder[i]<=24) {
             if (randNum == 0) {
-                if (downNatUp < 5) {
+                if (downNatUp < 6) {
                     STDirection.push(0);
                     downNatUp++;  
-                    //console.log("REACHD: Down man up");
+                    //console.log("REACHD: Down nat up");
                 }
-                else if (downNatDown < 5) {
+                else if (downNatDown < 6) {
                     STDirection.push(1); 
                     downNatDown++;
+                    //console.log("REACHD");
+
                 }
             }
             else if (randNum == 1) {
-                if (downNatDown < 5){
+                if (downNatDown < 6){
                      STDirection.push(1); 
                      downNatDown++; 
-                     //console.log("REACHD: Up man down");
+                     //console.log("REACHD: down nat down");
                 }
-                else if (downNatUp < 5) {
+                else if (downNatUp < 6) {
                     STDirection.push(0); 
                     downNatUp++;
+                    //console.log("REACHD: Up man down");
+
                 }
             }
         }

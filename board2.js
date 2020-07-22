@@ -1,6 +1,6 @@
 
 function createBoard(){
-    board = new Array(40); //--> why do you define the array here and not globally?
+    board = new Array(48); //--> why do you define the array here and not globally?
 
     for (var i = 0; i < board.length; i++) {  //creates the board object
     // all items are zero

@@ -1,13 +1,12 @@
 function boxClicked(boxNum){           
 
     thirdRTs[curTrial] = Date.now() - startRT; 
-    document.getElementById("inputRT3_" + (curTrial + 1)).value = thirdRTs[curTrial]; 
 
-    //so boxNum will be 1 if the first box (regular image) is clicked
-    //boxNum will be 2 if the second box (zoomed in image) is clicked
+    //so boxNum will be 1 if the first box (regular image that was initially dislayed) is clicked
+    //boxNum will be 2 if the second box (zoomed in OR zoomed out image) is clicked
 
-    //zoomedIn[curTrial] == 0 means that the image shown initially was zoomed in
-    //zoomedIn[curTrial] == 1 means that the image shown initially was regular
+    //zoomedIn[curTrial] == 0 means that the image shown along with the 'regular' image will be zoomed in (relatively)
+    //zoomedIn[curTrial] == 1 means that the image shown along with the 'regular' image will be zoomed out (relatively)
     
     //regular or zoomed in match 
 
@@ -15,15 +14,14 @@ function boxClicked(boxNum){
     document.getElementById("box").style.display = "none"; 
     document.getElementById("box2").style.display = "none"; 
 
-    if ((boxNum ==1 && zoomedIn[curTrial] == 1) || (boxNum ==2 && zoomedIn[curTrial] == 0)) {
+    if (boxNum == 1) {
         //display correct
         $('#correct').show();
         setTimeout(function() {
         $('#correct').hide(); //hide second part of trial
         },500);
 
-        manMadeBools[curTrial] = "correct";
-
+        zoomIdentify[curTrial] = "correct";
     }
 
     else {
@@ -34,10 +32,9 @@ function boxClicked(boxNum){
         $('#wrong').hide(); //hide second part of trial
         },500);
 
-        manMadeBools[curTrial] = "wrong";
+        zoomIdentify[curTrial] = "wrong";
 
     }
 
-    document.getElementById("inputSceneCateg_" + (curTrial + 1)).value = manMadeBools[curTrial];
     EndTrial(1200); 
 }
