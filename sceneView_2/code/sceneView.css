@@ -1,0 +1,154 @@
+
+
+#title {
+    font-size: 18pt;
+    text-align: center;
+    margin: 0 auto;
+    display: none;
+  }
+  #consent-title {
+      font-size: 18pt;
+      text-align: center;
+      margin: 0 auto;
+    }
+    
+    #consent-text {
+      font-size: 14pt;
+      text-align: center;
+      margin: 0 auto;
+      width: 75%;
+    }
+    
+    #consentButton {
+      text-align: center;
+      display: none;
+    }
+  
+    .instr {
+      display: none;
+      text-align: center;
+    }
+    
+    #instructions {
+      display: block;
+      max-width: 75%;
+      margin: 0 auto;
+      margin-top: 0px;
+      height: 200px;
+    }
+  
+    .buttonGroup {
+      display: none;
+      text-align: center;
+    }
+  
+    body {
+      font-family: Helvetica,Arial;
+      background-color: white;
+      color: black;
+      font-size: 14pt;
+      /* hide scoll bar */
+      overflow-y: scroll;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    }
+  
+    #loading {
+      font-size: 12pt;
+      text-align: center;
+    }
+    
+  #statusDIV {
+      font-size: 18px; 
+      position: absolute; 
+      left: 46%;
+      top: 94%; 
+  }
+  
+  #done {
+      font-size: 20px; 
+      position: absolute; 
+      text-align: center;
+      left: 25%; 
+      top: 34%; 
+  }
+  
+  
+  .center {
+  position: absolute; 
+  left: 50%; 
+  top: 50%; 
+  margin-top: -200px; 
+  margin-left: -300px; 
+  }
+  .centerGrayNoise {
+    position: absolute; 
+    left: 50%; 
+    top: 50%; 
+    margin-top: -250px; 
+    margin-left: -250px; 
+    }
+
+  .centerANSWERS {
+    position: absolute; 
+    left: 50%; 
+    top: 50%; 
+    margin-top: -150px; 
+    margin-left: -250px; 
+    }
+  
+  #fixationDot {
+      visibility: hidden; 
+      position: absolute; 
+      width: 10px; 
+      height: 10px; 
+      border-radius: 50%; 
+      background: black; 
+      left: 50%; 
+      top: 50%; 
+  }
+  
+  #fixationBox {
+  position: absolute; 
+  left: 50%; 
+  right: 50%; 
+  margin-left: -500px; 
+  }
+  
+  #warning {
+      position: absolute; 
+      font-size: 22px; 
+      top: 45%; 
+  }
+  
+  #instruction_box {
+    position: absolute; 
+    display: none; 
+    width: 510px; 
+    height: 258.5px; 
+    left:50%; 
+    top:50%; 
+    margin-left: -250px; 
+    margin-top: -245px; 
+    background-size: 555px;
+
+}
+
+.clickButton_text {
+  display: table;
+  vertical-align: center;
+  color: black;
+  font-size: 14pt;
+  border: 3px outset gray;
+  background-color: #CCCCCC;
+  padding: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  margin: 0 auto;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+  
+  
+  

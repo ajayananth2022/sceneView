@@ -1,0 +1,630 @@
+<html>
+<head>
+</head>
+
+<!-- jQuery and jQuery plugins -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="https://timbrady.org/turk/TimTurkTools.js"></script>
+
+<!-- Experiment style -->
+<link rel="stylesheet" type="text/css" href="sceneView.css">
+
+<script src="preloadImages.js"></script>
+<script src="prolificScripts.js"></script>
+<script src="balanceTrials.js"></script>
+
+
+<script>
+window.onload = function() {document.getElementById('submitButton')};
+
+/* When the document is ready, do some things:
+  -------------------------------------------- */ 
+$(document).ready(function() {
+	$('#submitButton').hide();
+
+    // get subject info
+	[prolificPID, subjectID, studyID, sessionID] = getProlificInfo();
+    console.log('subj: ' + subjectID);
+    makeImageList(20);
+    preloadImages(function() {
+        imagesPreloaded = true;
+        $('#loading').hide();
+        $('#consentButtonText').html('Proceed to Instructions');
+    });
+});
+
+var urlProlific = "https://app.prolific.co/submissions/complete?cc=19651EFE";
+
+var trialStruct = {}
+var subjectID; var studyID; var sessionID; // prolific info
+var finalCountDownClock = 3;
+var imagesPreloaded = false; 
+
+
+var objectsOrder = shuffle([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]);    //order of images presented
+var scenesOrder = balanceTrials(objectsOrder); 
+
+var curTrial = -1;
+
+var answer_RTs = [];             // pressing spacebar after finding target RTs
+var answerChoice = [];          //multiple choice answer. 
+
+var tooSlow = false; 
+
+//var to keep track of time taken by subject in experiment. 
+var startExp; 
+
+var foilChoices = [['Trophy', 'Crown', 'Silverware', 'Ribbon'], ['Stoplight', 'Intersection', 'Siren', 'Blinker'], ['Lamp', 'Candle', 'Streetlight', 'Torch'], 
+['Clock', 'Wristwatch', 'Wheel', 'Hourglass'], ['Backpack', 'Fanny pack', 'Briefcase', 'Purse'], ['Pot', 'Grass', 'Log', 'Mud'], ['Ceiling Fan', 'Windmill', 'Turbine', 'Air Conditioner'], 
+['Boots', 'Sandals', 'Cleats', 'Foot'], ['Basketball Hoop', 'Board', 'Pole', 'Swing'], ['Tree', 'Forest', 'Weeds', 'Shrub'], ['Hammer', 'Screwdriver', 'Knife', 'Saw'], 
+['Piano', 'Cello', 'Violin', 'Harmonica'], ['Scissors', 'Hairbrush', 'Saw', 'Chain'], ['Arm Chair', 'Bench', 'Stool', 'Sofa'], ['Camera', 'Flashlight', 'Cellphone', 'Tripod'], 
+['Water Bottle', 'Jug', 'Carton', 'Jar'], ['Cat', 'Dog', 'Puppy', 'Hamster'], ['Keys', 'Padlock', 'Earings', 'Lighter'], ['Laptop', 'Speaker', 'Battery', 'TV'], 
+['Mug', 'Juicebox', 'Container', 'Tincan']]
+
+//correct object labels
+var objectLabels = ['Trophy', 'Stoplight', 'Lamp', 'Clock', 'Backpack', 'Pot', 'Ceiling Fan', 'Boots', 'Basketball Hoop', 'Tree', 'Hammer', 'Piano', 'Scissors', 'Arm Chair', 'Camera', 
+'Water Bottle', 'Cat', 'Keys', 'Laptop', 'Mug']
+
+//array of arrays. Each inner array is: [userSelection (number), true or false]
+var userSelections = []; 
+
+shuffleFoils();
+
+function shuffleFoils() {
+    for (var i = 0; i<foilChoices.length; i++) {
+        foilChoices[i] = shuffle(foilChoices[i]);
+    }
+}
+
+//just two simple helper functions below
+function getRandomInt(min, max) {
+min = Math.ceil(min);
+max = Math.floor(max);
+var num =  Math.floor(Math.random() * (max - min + 1)) + min;
+return num; 
+}
+  
+/* Fisher-Yates shuffle */
+function shuffle(o) {
+    for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+        return o;
+    }
+
+
+/* They clicked the start experiment button: */
+
+function StartExperiment() {  
+
+  startExp = Date.now();  
+
+  $('#title').hide();
+  $('#instructions').hide();                                        //hides the beginning instructions and the startExperiment button
+  $('body').css('cursor', 'none');
+  ShowScene();
+}
+
+/* Show the current trial (available in global variable curTrial): */
+function ShowScene() {
+
+    curTrial++; 
+
+    //hide the multiple choice section before start of every trial. 
+    document.getElementById("answerChoices").style.display = "none"; 
+    //console.log("answer choices hidden");
+
+    // show fixation
+    //fixation for 500 ms
+    document.getElementById("statusDIV").style.display = "block"; 
+    document.getElementById("statusDIV").innerHTML = "Trial " + (curTrial + 1) + " out of 20";
+
+
+    $('body').css('cursor', 'none');
+    document.getElementById("fixationDot").style.visibility = "visible"; 
+
+    //show scene 500 ms after fixation dot is first shown;
+    setTimeout(function() { 
+        document.getElementById("fixationDot").style.visibility = "hidden"; 
+
+        //show scene
+        $('#scene' + scenesOrder[curTrial]).show();  
+        //console.log("scene shown");
+
+        setTimeout(function() {// after 500 ms scene will be hidden
+
+        //hide the scene
+        $('#scene' + scenesOrder[curTrial]).hide();  
+        //console.log("scene hidden");
+
+        //show object
+        $('#object'+ objectsOrder[curTrial]).show();  
+        //console.log("object shown");
+
+        setTimeout(function() {// after object is shown for 25ms, hide object, show mask, then collect user input. 
+            //hide the object
+            $('#object'+ objectsOrder[curTrial]).hide();  
+            //console.log("object hidden");
+
+            //show mask for 250 ms immediately after object hidden, then hide mask and ask M.C question
+            $('#object' + objectsOrder[curTrial] + '_mask').show();  
+            setTimeout(function() {
+                $('#object' + objectsOrder[curTrial] + '_mask').hide();  
+                askUser(); 
+                //BELOW number is how long MASK will be shown **after the object is hidden**
+                }, 250); 
+                //BELOW number is how long the OBJECT will be shown!
+            }, 25);
+        }, 500);
+
+    }, 500);
+}
+
+//clear the previous radio button the user clicked on. 
+//really, there is only 1 button to clear but i made this code not smart and cleared all of the 4/ not a big deal
+//next, updates inputs with current object's corresponding foils
+
+function updateInputs() {
+    document.getElementById("choiceA").checked = false;
+    document.getElementById("choiceB").checked = false;
+    document.getElementById("choiceC").checked = false;
+    document.getElementById("choiceD").checked = false;
+
+    //objectOrder array is not 0 indexed; therefore we need to minus by 1 
+    $('label[for=choiceA]').html(foilChoices[objectsOrder[curTrial] - 1][0]);
+    $('label[for=choiceB]').html(foilChoices[objectsOrder[curTrial] - 1][1]);
+    $('label[for=choiceC]').html(foilChoices[objectsOrder[curTrial] - 1][2]);
+    $('label[for=choiceD]').html(foilChoices[objectsOrder[curTrial] - 1][3]);
+}
+
+//at this point, the subject has seen the background, then the image. 
+function askUser() {
+
+    //250 ms delay between images shown and multiple choice presented 
+
+    setTimeout(function() {
+        $('body').css('cursor', 'auto'); 
+
+        //clear the previous answer choice the user selected, then update with foils & correct answer choice
+        updateInputs(); 
+
+        console.log('reached');
+        document.getElementById("answerChoices").style.display = "block"; 
+    }, 250); 
+}
+
+//foilChoices[objectsOrder[curTrial]]
+//objectsOrder[curTrial]
+
+//this function runs at the end of a full trial, and then repeats the trial with the next image. 
+//if all 40 images are shown, experiment terminates. 
+function EndTrial(ErrorDur){
+	
+            //execute once we are done (after last trial!)
+            //push all info about experiment structure and user response to trialStruct
+
+                trialStruct['key'] = {'trialOrder': "order of images that appear", "searchDirection": "0: upSearchTask, 1: downSearchTask", "zoomAssign": "0:image shown along with  'regular' image will be zoomed in (relatively), 1: image shown along with the 'regular' image will be zoomed out (relatively)" , "search_firstRTs": "RT after subject presses spacebar", "search_secondRTs": "RT after subject clicks on masked square", 'clickedSq_accuracy': "0: wrong, 1: correct", 'zoom_thirdRTs': 'RT after user clicks one of two images', "zoomIdentify": "0: wrong, 1: correct"}
+
+                trialStruct['prolificPID'] = prolificPID;
+                trialStruct['subjectID'] = subjectID;
+                trialStruct['studyID'] = studyID;
+                trialStruct['sessionID'] = sessionID;
+
+                trialStruct['trialDuration'] = Date.now() - startExp
+
+                trialStruct['trialOrder'] = trialOrder
+                trialStruct['searchDirection'] = searchDirection
+                trialStruct['zoomAssign'] = zoomAssign
+                trialStruct['search_firstRTs'] = search_firstRTs
+                trialStruct['search_secondRTs'] = search_secondRTs
+                trialStruct['clickedSquare'] = clickedSquare
+                trialStruct['targetSquare'] = targetSquare
+                trialStruct['clickedSq_accuracy'] = clickedSq_accuracy
+
+                trialStruct['zoom_thirdRTs'] = zoom_thirdRTs
+                trialStruct['zoomIdentify'] = zoomIdentify
+
+                trialStruct['displayWindowHeight'] = $(window).height();
+                trialStruct['displayWindowWidth'] = $(window).width();
+                trialStruct['displayScreenHeight'] = screen.height;
+                trialStruct['displayScreenWidth'] = screen.width;
+
+
+                trialStruct['commentText'] = document.getElementById('commentBox').value;
+
+                trialStruct['board'] = board
+
+                document.getElementById("statusDIV").style.display = "none"; 
+                $('#submitText').show()
+                $('#submitButton').show()
+                $('body').css('cursor', 'auto'); 
+
+            //once submitButton is clicked, clickSubmitRedirect() function is run
+            
+}
+
+function ClickedConsent() {
+  if (imagesPreloaded == true) {
+    $('#consent').hide();
+    $('#title').show();
+
+    //this below must be later changed if there are more than 1 instruction pages. 
+    $('#Instruction0').show();
+    $('#buttonGroup').show();
+  }
+}
+
+
+function validate() {
+     if ( $('#consentBox').is(":checked") ) {
+       $('#consentButton').show();
+     } 
+     else {
+       $('#consentButton').hide();
+    }
+}
+
+//<a href = "javascript:ShowScene()" style = "color:red; font-weight: bold; font-size: 16pt; text-align: center">Next Trial</a>
+function displayRadioValue() { 
+    var choices = document.getElementsByName('choice'); 
+              
+    for(i = 0; i < choices.length; i++) { 
+        if(choices[i].checked) {
+            //console.log(choices[i].value); 
+
+            if (foilChoices[objectsOrder[curTrial] - 1][choices[i].value] == objectLabels[objectsOrder[curTrial] - 1]) {
+                userSelections.push([choices[i].value, true]); 
+            }
+            else {
+                userSelections.push([choices[i].value, false]); 
+            }
+        }
+    } 
+    //now we are at the end of the trial, so call showScene() to restart
+
+    //foilChoices[objectsOrder[curTrial] - 1][choices[i].value] == objectLabels[objectsOrder[curTrial] - 1]
+    ShowScene(); 
+} 
+
+</script>
+<body>
+
+
+
+
+<!-- text to participant -->
+
+<div id="title"><strong>1) Instructions</strong></div>
+
+<div id="consent">
+    <div id="consent-title"><strong>Consent</strong></div>
+    <div id="consent-text">
+      <p>By completing this survey, you are consenting to be in this research study. The data we collect is completely anonymous. Your participation is voluntary and you can stop at any time. If you are ready, click the check box below to indicate your consent. When image files are loaded, you can click the button to start.</p>
+
+      <label><input type="checkbox" name="consentBox" id="consentBox" value="value" onclick="validate()">I agree to participate.</label>
+
+      <div id="consentButton" class="clickButton">
+        <p> <br />  </p>
+        <a href="javascript:ClickedConsent()" class="clickButton_text" id="consentButtonText">Loading images, please wait...</a>
+      </div>
+    </div>
+    <br><br>
+    <div id='loading'><span id='preloadStatus'>Image loading progress: 0%</span>
+      <br><br>
+      (Images usually take about 15 to 20 seconds to load. If the "Loading images" message does not disappear after 30 seconds, we apologize; images may not load on your computer and you cannot participate.)
+    </div>
+</div>
+
+<span id="instructions">
+
+    <div class="instr" id="Instruction0">
+        <p>  <br /> <br /> <br /> <br /> <br /> <br />   <br /><br /> <br /> <br />  <br /> <br /><br /><br />
+    </p>
+        <p>This experiment consist of 20 trials. In eact trial, 2 images will be flashed, one after another. You will then be shown with four choices, and your task is to select the choice that best describes the image you saw. Be as fast and accurate as possible!</p>
+        <a href="javascript:StartExperiment()" class="clickButton_text" id="startExpButton" style="color:blue; font-weight:bold; font-size: 16pt; display:inline-block;" >Start Experiment</a>
+
+    </div>
+    
+  </span>
+
+<!-- Standard post-experiment comment box (initially hidden): -->
+<div class="doneTextStyle" id="submitText" style="display:none">
+    <strong>You are done! Thanks! Click the button below to submit your data and get redirected back to Prolific to receive compensation. </strong>
+    <p>Additionally, feel free to leave any comments about the experiment down below</p>
+    <textarea id="commentBox" row=4 cols=40 placeholder="Enter you comments here..."></textarea>
+    <div id = "submitButton"  onclick = "clickSubmitRedirect()">
+        <p> SUBMIT</p>
+    </div>    
+</div>
+
+<div class="doneTextStyle" id="redirectToProlific" style="display:none">
+    <p>Your browser should automatically redirect you to Prolific's webpage where you will be given a completion code.</p>
+    <p>Redirecting in <span id="countDown"><b></b></span> seconds.</p>
+    <p>If you're not automatically redirected in a few seconds, please click the below link, or copy and paste the address into your web browser:
+    <br>
+    <b><a id="urlProlific" href=""></a></b>
+  </div>
+
+<div id = "fixationDot" ></div>
+
+<div id="answerChoices" class = "centerANSWERS" style = "width: 500px; height: 250 px; 
+vertical-align: middle; text-align: center; padding-top: 25px; display:none">
+
+    <p>Select the name that best describes the second picture you saw.</p>
+    <p style = "padding-top: 5px"></p>
+
+
+    <div class = "radio-toolbar">
+        <input type = "radio" name = "choice" id = "choiceA" value = "0">
+        <label for ="choiceA">choiceA</label>
+        <input type = "radio" name = "choice" id = "choiceB" value = "1">
+        <label for ="choiceB">choiceB</label>
+        <input type = "radio" name = "choice" id = "choiceC" value = "2">
+        <label for ="choiceC">choiceC</label>
+        <input type = "radio" name = "choice" id = "choiceD" value = "3">
+        <label for ="choiceD">choiceD</label>
+    <p></p>
+    </div>
+    <hr>
+
+    <button type="button" onclick="displayRadioValue()"> 
+        Next Trial 
+    </button>
+</div>
+
+<div id="statusDIV" style="display:none">Trial 1 out of 20.</div>
+
+<div id = "mask" class = "grayNoise" style="display:none" > 
+    <img src = "../grayNoise.jpg" width="500" height="500" class = "centerGrayNoise">
+</div>
+
+<div class = "images">
+
+    <div id = "object1" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw/object_1.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object2" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw/object_2.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object3" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw/object_3.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object4" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw/object_4.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object5" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw/object_5.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object6" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw/object_6.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object7" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw/object_7.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object8" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw/object_8.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object9" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw/object_9.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object10" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw/object_10.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object11" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw/object_11.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object12" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw/object_12.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object13" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw/object_13.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object14" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw/object_14.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object15" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw/object_15.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object16" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw/object_16.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object17" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw/object_17.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object18" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw/object_18.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object19" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw/object_19.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object20" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw/object_20.jpg" width="600" class = "center">
+    </div>
+
+
+    <div id = "object1_mask" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw_masks/mask_object_1.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object2_mask" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw_masks/mask_object_2.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object3_mask" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw_masks/mask_object_3.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object4_mask" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw_masks/mask_object_4.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object5_mask" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw_masks/mask_object_5.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object6_mask" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw_masks/mask_object_6.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object7_mask" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw_masks/mask_object_7.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object8_mask" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw_masks/mask_object_8.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object9_mask" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw_masks/mask_object_9.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object10_mask" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw_masks/mask_object_10.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object11_mask" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw_masks/mask_object_11.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object12_mask" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw_masks/mask_object_12.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object13_mask" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw_masks/mask_object_13.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object14_mask" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw_masks/mask_object_14.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object15_mask" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw_masks/mask_object_15.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object16_mask" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw_masks/mask_object_16.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object17_mask" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw_masks/mask_object_17.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object18_mask" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw_masks/mask_object_18.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object19_mask" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw_masks/mask_object_19.jpg" width="600" class = "center">
+    </div>
+
+    <div id = "object20_mask" class = "object" style="display:none" > 
+        <img src = "../Round3_images/Blurred_bw_masks/mask_object_20.jpg" width="600" class = "center">
+    </div>
+
+
+
+
+
+
+    <div id = "scene1" class = "scene" style="display:none" > 
+        <img src = "../scenes_images/scene_1.jpg"] width="600" class = "center">
+    </div>
+
+    <div id = "scene2" class = "scene" style="display:none" > 
+        <img src = "../scenes_images/scene_2.jpg"] width="600" class = "center">
+    </div>
+
+    <div id = "scene3" class = "scene" style="display:none" > 
+        <img src = "../scenes_images/scene_3.jpg"] width="600" class = "center">
+    </div>
+
+    <div id = "scene4" class = "scene" style="display:none" > 
+        <img src = "../scenes_images/scene_4.jpg"] width="600" class = "center">
+    </div>
+
+    <div id = "scene5" class = "scene" style="display:none" > 
+        <img src = "../scenes_images/scene_5.jpg"] width="600" class = "center">
+    </div>
+
+    <div id = "scene6" class = "scene" style="display:none" > 
+        <img src = "../scenes_images/scene_6.jpg"] width="600" class = "center">
+    </div>
+
+    <div id = "scene7" class = "scene" style="display:none" > 
+        <img src = "../scenes_images/scene_7.jpg"] width="600" class = "center">
+    </div>
+
+    <div id = "scene8" class = "scene" style="display:none" > 
+        <img src = "../scenes_images/scene_8.jpg"] width="600" class = "center">
+    </div>
+
+    <div id = "scene9" class = "scene" style="display:none" > 
+        <img src = "../scenes_images/scene_9.jpg"] width="600" class = "center">
+    </div>
+
+    <div id = "scene10" class = "scene" style="display:none" > 
+        <img src = "../scenes_images/scene_10.jpg"] width="600" class = "center">
+    </div>
+
+    <div id = "scene11" class = "scene" style="display:none" > 
+        <img src = "../scenes_images/scene_11.jpg"] width="600" class = "center">
+    </div>
+
+    <div id = "scene12" class = "scene" style="display:none" > 
+        <img src = "../scenes_images/scene_12.jpg"] width="600" class = "center">
+    </div>
+
+    <div id = "scene13" class = "scene" style="display:none" > 
+        <img src = "../scenes_images/scene_13.jpg"] width="600" class = "center">
+    </div>
+
+    <div id = "scene14" class = "scene" style="display:none" > 
+        <img src = "../scenes_images/scene_14.jpg"] width="600" class = "center">
+    </div>
+
+    <div id = "scene15" class = "scene" style="display:none" > 
+        <img src = "../scenes_images/scene_15.jpg"] width="600" class = "center">
+    </div>
+
+    <div id = "scene16" class = "scene" style="display:none" > 
+        <img src = "../scenes_images/scene_16.jpg"] width="600" class = "center">
+    </div>
+
+    <div id = "scene17" class = "scene" style="display:none" > 
+        <img src = "../scenes_images/scene_17.jpg"] width="600" class = "center">
+    </div>
+
+    <div id = "scene18" class = "scene" style="display:none" > 
+        <img src = "../scenes_images/scene_18.jpg"] width="600" class = "center">
+    </div>
+
+    <div id = "scene19" class = "scene" style="display:none" > 
+        <img src = "../scenes_images/scene_19.jpg"] width="600" class = "center">
+    </div>
+
+    <div id = "scene20" class = "scene" style="display:none" > 
+        <img src = "../scenes_images/scene_20.jpg"] width="600" class = "center">
+    </div>
+      
+</div>
+
+</body>
+</html>
