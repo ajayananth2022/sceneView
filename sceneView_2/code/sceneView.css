@@ -64,14 +64,7 @@
       left: 46%;
       top: 94%; 
   }
-  
-  #done {
-      font-size: 20px; 
-      position: absolute; 
-      text-align: center;
-      left: 25%; 
-      top: 34%; 
-  }
+
   
   
   .center {
@@ -96,6 +89,17 @@
     margin-top: -150px; 
     margin-left: -250px; 
     }
+
+    .doneTextStyle {
+      position: absolute; 
+      left: 50%; 
+      top: 50%; 
+      margin-top: -100px; 
+      margin-left: -550px; 
+      text-align: center;
+
+    }
+
   
   #fixationDot {
       visibility: hidden; 

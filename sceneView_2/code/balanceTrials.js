@@ -41,7 +41,6 @@ function balanceTrials(objectsOrder) {
         randInt = getRandomInt(0, 1); 
 
 
-        console.log(objectSceneTracker[0]);
         //if the object is a 'up' object
         if (objectsOrder[i] > 0 && objectsOrder[i] <=10) {
             
@@ -79,22 +78,31 @@ function balanceTrials(objectsOrder) {
                 sceneAdded = true; 
             }
         }
+
+
+
+        //thhis below if statement is kindof a smart fix, im proud of this one
+        //but the rest of this code is so clunky there is definetely a better way to do this lol. 
+        //basically, for every element of the objects array, you want to assign a corresponding scene. this below line achieves that. 
+        if (sceneAdded == false) {
+            i--; 
+        }
     
-        console.log(sceneAdded); 
-        console.log('/////////////////////////'); 
-        console.log('objectOrder')
-        console.log(objectsOrder[i])
-        console.log('i'); 
-        console.log(i); 
-        console.log('randInt')
-        console.log(randInt)
-        console.log("scenesUpTracker"); 
-        console.log(scenesUpTracker); 
-        console.log("scenesDownTracker"); 
-        console.log(scenesDownTracker); 
-        console.log("objectSceneTracker"); 
-        console.log(objectSceneTracker); 
-        console.log('/////////////////////////'); 
+        //console.log('/////////////////////////'); 
+        //console.log(sceneAdded); 
+        //console.log('objectOrder')
+        //console.log(objectsOrder[i])
+        //console.log('i'); 
+        //console.log(i); 
+        //console.log('randInt')
+        //console.log(randInt)
+        //console.log("scenesUpTracker"); 
+        //console.log(scenesUpTracker); 
+        //console.log("scenesDownTracker"); 
+        //console.log(scenesDownTracker); 
+        //console.log("objectSceneTracker"); 
+        //console.log(objectSceneTracker); 
+        //console.log('/////////////////////////'); 
     }
 
     return scenesOrder; 

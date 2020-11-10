@@ -46,13 +46,14 @@ var scenesOrder = balanceTrials(objectsOrder);
 
 var curTrial = -1;
 
-var answer_RTs = [];             // pressing spacebar after finding target RTs
-var answerChoice = [];          //multiple choice answer. 
+//var to keep track of time taken by subject for total experiment. 
+var startExp; 
+//var to keep track of time taken to answer MC question in 1 TRIAL
+var mcTimer; 
+var mcRTs = [];          
+
 
 var tooSlow = false; 
-
-//var to keep track of time taken by subject in experiment. 
-var startExp; 
 
 var foilChoices = [['Trophy', 'Crown', 'Silverware', 'Ribbon'], ['Stoplight', 'Intersection', 'Siren', 'Blinker'], ['Lamp', 'Candle', 'Streetlight', 'Torch'], 
 ['Clock', 'Wristwatch', 'Wheel', 'Hourglass'], ['Backpack', 'Fanny pack', 'Briefcase', 'Purse'], ['Pot', 'Grass', 'Log', 'Mud'], ['Ceiling Fan', 'Windmill', 'Turbine', 'Air Conditioner'], 
@@ -185,9 +186,10 @@ function askUser() {
 
         //clear the previous answer choice the user selected, then update with foils & correct answer choice
         updateInputs(); 
-
-        console.log('reached');
         document.getElementById("answerChoices").style.display = "block"; 
+
+        //timer to record how long user took to answer mc question
+        mcTimer = Date.now();  
     }, 250); 
 }
 
@@ -196,12 +198,12 @@ function askUser() {
 
 //this function runs at the end of a full trial, and then repeats the trial with the next image. 
 //if all 40 images are shown, experiment terminates. 
-function EndTrial(ErrorDur){
+function EndTrial(){
 	
             //execute once we are done (after last trial!)
             //push all info about experiment structure and user response to trialStruct
 
-                trialStruct['key'] = {'trialOrder': "order of images that appear", "searchDirection": "0: upSearchTask, 1: downSearchTask", "zoomAssign": "0:image shown along with  'regular' image will be zoomed in (relatively), 1: image shown along with the 'regular' image will be zoomed out (relatively)" , "search_firstRTs": "RT after subject presses spacebar", "search_secondRTs": "RT after subject clicks on masked square", 'clickedSq_accuracy': "0: wrong, 1: correct", 'zoom_thirdRTs': 'RT after user clicks one of two images', "zoomIdentify": "0: wrong, 1: correct"}
+                trialStruct['key'] = {}
 
                 trialStruct['prolificPID'] = prolificPID;
                 trialStruct['subjectID'] = subjectID;
@@ -210,17 +212,15 @@ function EndTrial(ErrorDur){
 
                 trialStruct['trialDuration'] = Date.now() - startExp
 
-                trialStruct['trialOrder'] = trialOrder
-                trialStruct['searchDirection'] = searchDirection
-                trialStruct['zoomAssign'] = zoomAssign
-                trialStruct['search_firstRTs'] = search_firstRTs
-                trialStruct['search_secondRTs'] = search_secondRTs
-                trialStruct['clickedSquare'] = clickedSquare
-                trialStruct['targetSquare'] = targetSquare
-                trialStruct['clickedSq_accuracy'] = clickedSq_accuracy
+                trialStruct['foilChoices'] = foilChoices; 
+                trialStruct['objectLabels'] = objectLabels; 
 
-                trialStruct['zoom_thirdRTs'] = zoom_thirdRTs
-                trialStruct['zoomIdentify'] = zoomIdentify
+                trialStruct['ObjectsOrder'] = objectsOrder; 
+                trialStruct['scenesOrder'] = scenesOrder; 
+
+                trialStruct['userSelections'] = userSelections
+                trialStruct['trialTimes'] = mcRTs; 
+  
 
                 trialStruct['displayWindowHeight'] = $(window).height();
                 trialStruct['displayWindowWidth'] = $(window).width();
@@ -229,8 +229,6 @@ function EndTrial(ErrorDur){
 
 
                 trialStruct['commentText'] = document.getElementById('commentBox').value;
-
-                trialStruct['board'] = board
 
                 document.getElementById("statusDIV").style.display = "none"; 
                 $('#submitText').show()
@@ -262,9 +260,11 @@ function validate() {
     }
 }
 
-//<a href = "javascript:ShowScene()" style = "color:red; font-weight: bold; font-size: 16pt; text-align: center">Next Trial</a>
-function displayRadioValue() { 
+function validateMCSelection() { 
     var choices = document.getElementsByName('choice'); 
+
+    //record how long each trial took, from time point of showing MC choices to user clicking 'next trial'
+    mcRTs.push(Date.now() - mcTimer); 
               
     for(i = 0; i < choices.length; i++) { 
         if(choices[i].checked) {
@@ -281,7 +281,16 @@ function displayRadioValue() {
     //now we are at the end of the trial, so call showScene() to restart
 
     //foilChoices[objectsOrder[curTrial] - 1][choices[i].value] == objectLabels[objectsOrder[curTrial] - 1]
-    ShowScene(); 
+
+    //end experiment after user completes last trial (the 20th trial, but curTrial will be 19 here)
+    if (curTrial == 19) {
+        document.getElementById("answerChoices").style.display = "none"; 
+        EndTrial(); 
+    }
+    else {
+        ShowScene(); 
+    }
+    
 } 
 
 </script>
@@ -316,9 +325,10 @@ function displayRadioValue() {
 <span id="instructions">
 
     <div class="instr" id="Instruction0">
-        <p>  <br /> <br /> <br /> <br /> <br /> <br />   <br /><br /> <br /> <br />  <br /> <br /><br /><br />
-    </p>
+    
         <p>This experiment consist of 20 trials. In eact trial, 2 images will be flashed, one after another. You will then be shown with four choices, and your task is to select the choice that best describes the image you saw. Be as fast and accurate as possible!</p>
+
+        <br /> <br /> <br /> <br />   
         <a href="javascript:StartExperiment()" class="clickButton_text" id="startExpButton" style="color:blue; font-weight:bold; font-size: 16pt; display:inline-block;" >Start Experiment</a>
 
     </div>
@@ -329,10 +339,11 @@ function displayRadioValue() {
 <div class="doneTextStyle" id="submitText" style="display:none">
     <strong>You are done! Thanks! Click the button below to submit your data and get redirected back to Prolific to receive compensation. </strong>
     <p>Additionally, feel free to leave any comments about the experiment down below</p>
-    <textarea id="commentBox" row=4 cols=40 placeholder="Enter you comments here..."></textarea>
-    <div id = "submitButton"  onclick = "clickSubmitRedirect()">
-        <p> SUBMIT</p>
-    </div>    
+    <textarea id="commentBox" row=8 cols=40 placeholder="Enter you comments here..."></textarea>
+    <br /> <br /> 
+    <button type="button" onclick="clickSubmitRedirect()"> 
+        <p> SUBMIT</p> 
+    </button>   
 </div>
 
 <div class="doneTextStyle" id="redirectToProlific" style="display:none">
@@ -365,16 +376,12 @@ vertical-align: middle; text-align: center; padding-top: 25px; display:none">
     </div>
     <hr>
 
-    <button type="button" onclick="displayRadioValue()"> 
+    <button type="button" onclick="validateMCSelection()"> 
         Next Trial 
     </button>
 </div>
 
 <div id="statusDIV" style="display:none">Trial 1 out of 20.</div>
-
-<div id = "mask" class = "grayNoise" style="display:none" > 
-    <img src = "../grayNoise.jpg" width="500" height="500" class = "centerGrayNoise">
-</div>
 
 <div class = "images">
 
