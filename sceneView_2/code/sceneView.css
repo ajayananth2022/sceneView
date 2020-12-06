@@ -23,7 +23,7 @@
       text-align: center;
       display: none;
     }
-  
+
     .instr {
       display: none;
       text-align: center;
@@ -60,12 +60,12 @@
     
   #statusDIV {
       font-size: 18px; 
-      position: absolute; 
-      left: 46%;
+      position: absolute;
+      text-align: center;
+      left: 50%; 
+      margin-left: -100px; 
       top: 94%; 
   }
-
-  
   
   .center {
   position: absolute; 
@@ -74,6 +74,7 @@
   margin-top: -200px; 
   margin-left: -300px; 
   }
+
   .centerGrayNoise {
     position: absolute; 
     left: 50%; 
@@ -82,12 +83,51 @@
     margin-left: -250px; 
     }
 
+
   .centerANSWERS {
     position: absolute; 
     left: 50%; 
-    top: 50%; 
+    top: 50%;
+
+    width: 700px; 
+    height: 250 px; 
+
     margin-top: -150px; 
-    margin-left: -250px; 
+    margin-left: -350px; 
+    padding-top: 25px; 
+
+    text-align: center;
+    display:none;
+    vertical-align: middle;  
+    }
+
+    .radio-toolbar input[type="radio"] {
+      opacity: 0;
+    }
+
+    .radio-toolbar label {
+      display: inline-block;
+      background-color: #ddd;
+      padding: 5px 20px;
+      font-family: sans-serif, Arial;
+      font-size: 16px;
+      border: 2px solid #444;
+      border-radius: 4px;
+      vertical-align:middle;
+      text-align: center;
+    }
+
+    .radio-toolbar label:hover {
+      background-color: rgb(168, 168, 168);
+    }
+
+    .radio-toolbar input[type="radio"]:focus + label {
+      border: 2px dashed #444;
+    }
+
+    .radio-toolbar input[type="radio"]:checked + label {
+      background-color:  rgb(160, 158, 158);
+      border-color:  rgb(56, 56, 56);
     }
 
     .doneTextStyle {
@@ -95,11 +135,10 @@
       left: 50%; 
       top: 50%; 
       margin-top: -100px; 
-      margin-left: -550px; 
+      margin-left: -625px; 
       text-align: center;
 
     }
-
   
   #fixationDot {
       visibility: hidden; 
@@ -119,12 +158,6 @@
   margin-left: -500px; 
   }
   
-  #warning {
-      position: absolute; 
-      font-size: 22px; 
-      top: 45%; 
-  }
-  
   #instruction_box {
     position: absolute; 
     display: none; 
@@ -136,6 +169,12 @@
     margin-top: -245px; 
     background-size: 555px;
 
+}
+
+#lateWarning {
+  text-align: center;
+  font-size: 20px; 
+  margin: 10px auto;
 }
 
 .clickButton_text {
